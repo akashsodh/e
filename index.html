@@ -116,8 +116,8 @@
 
 <div class="dashboard">
   <h2 style="color: white; font-size: 1.5em; margin-top: 0;">🎓 Master Dashboard</h2>
-  <p>Total Syllabus: <strong>240 Classes</strong></p>
-  <p>✅ Completed: <strong id="total-completed">0</strong> &nbsp;|&nbsp; ⏳ Left: <strong id="total-remaining">240</strong></p>
+  <p>Total Syllabus: <strong>284 Classes</strong></p>
+  <p>✅ Completed: <strong id="total-completed">0</strong> &nbsp;|&nbsp; ⏳ Left: <strong id="total-remaining">284</strong></p>
   <div class="progress-bar-bg" style="background: rgba(255,255,255,0.3); height: 8px; margin-top: 15px;">
     <div id="overall-progress" class="progress-bar-fill" style="background: #2ed573;"></div>
   </div>
@@ -136,9 +136,9 @@
 <div class="subject-card">
   <h3 style="color: var(--english);">📘 English</h3>
   <div class="subject-summary">
-    <span>Total: 67</span>
+    <span>Total: 112</span>
     <span style="color: var(--english);">✅ Done: <span id="english-completed">0</span></span>
-    <span>⏳ Left: <span id="english-remaining">67</span></span>
+    <span>⏳ Left: <span id="english-remaining">112</span></span>
   </div>
   <div id="english-container"></div>
 </div>
@@ -182,9 +182,13 @@
       { topic: "Determiners", total: 8, completed: 0 }, { topic: "Determiners PYQ", total: 2, completed: 0 },
       { topic: "Article", total: 6, completed: 0 }, { topic: "Active passive voice", total: 6, completed: 0 },
       { topic: "Active passive MCQs", total: 2, completed: 0 }, { topic: "Direct indirect", total: 5, completed: 0 },
-      { topic: "Transformation", total: 9, completed: 0 }, { topic: "Translation", total: 5, completed: 0 },
-      { topic: "Preposition", total: 6, completed: 0 }, { topic: "Vocab- Prefix-Suffix-Root Words", total: 4, completed: 0 },
-      { topic: "Vocab Confusable Words", total: 11, completed: 0 }, { topic: "Vocab Extra Confisable Words", total: 5, completed: 0 },
+      // नए जोड़े गए टॉपिक्स
+      { topic: "Transformation", total: 9, completed: 0 },
+      { topic: "Translation", total: 5, completed: 0 },
+      { topic: "Preposition", total: 5, completed: 0 },
+      { topic: "Vocab- Prefix-Suffix-Root Words", total: 4, completed: 0 },
+      { topic: "Vocab Confusable Words", total: 11, completed: 0 },
+      { topic: "Vocab Extra Confusable Words", total: 5, completed: 0 },
       { topic: "Vocab One word + PYQs", total: 6, completed: 0 }
     ],
     maths: [
@@ -200,15 +204,29 @@
     history: {} // New object to store daily history
   };
 
-  const subjectTotals = { hindi: 87, english: 67, maths: 86 };
+  const subjectTotals = { hindi: 87, english: 112, maths: 86 };
   const subjectColors = { hindi: 'var(--hindi)', english: 'var(--english)', maths: 'var(--maths)' };
   
   let classData = JSON.parse(localStorage.getItem("myProSyllabusTracker"));
   
-  // Migration for new features
+  // Migration for new features and syncing new topics safely
   if (!classData) {
-    classData = defaultData;
+    classData = JSON.parse(JSON.stringify(defaultData));
+  } else {
+    // Sync new topics into existing user data so progress is not lost
+    ['hindi', 'english', 'maths'].forEach(subject => {
+      defaultData[subject].forEach(defItem => {
+        let existingItem = classData[subject].find(item => item.topic === defItem.topic);
+        if (!existingItem) {
+          classData[subject].push({ ...defItem });
+        } else {
+           // Update total classes in case they were modified (like Preposition 4 to 5)
+           existingItem.total = defItem.total;
+        }
+      });
+    });
   }
+  
   if (!classData.history) {
     classData.history = {};
   }
@@ -253,7 +271,7 @@
   }
 
   function render() {
-    let grandTotalClasses = 240;
+    let grandTotalClasses = 285;
     let grandTotalCompleted = 0;
 
     ['hindi', 'english', 'maths'].forEach(subject => {
@@ -289,7 +307,7 @@
 
     document.getElementById('total-completed').innerText = grandTotalCompleted;
     document.getElementById('total-remaining').innerText = grandTotalClasses - grandTotalCompleted;
-    document.getElementById('overall-progress').style.width = `${(grandTotalCompleted / grandTotalClasses) * 100}%`;
+    document.getElementById('overall-progress').style.width = `${(grandTotalClasses > 0 ? (grandTotalCompleted / grandTotalClasses) * 100 : 0)}%`;
 
     renderHistory();
   }
@@ -326,3 +344,4 @@
 </script>
 </body>
 </html>
+
