@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pro Study Tracker</title>
+<title>Pro Study Tracker - Smart Edition</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
   :root {
     --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
@@ -16,6 +17,20 @@
     --english: #1dd1a1;
     --maths: #ffa502;
     --text: #2f3542;
+    --text-muted: #57606f;
+    --border: #f1f2f6;
+    --btn-bg: #f1f2f6;
+  }
+
+  body.dark-mode {
+    --bg-gradient: linear-gradient(135deg, #1e1e24 0%, #15151a 100%);
+    --card-bg: #2b2b36;
+    --primary: #8294f0;
+    --primary-dark: #9b72c9;
+    --text: #f1f2f6;
+    --text-muted: #a4b0be;
+    --border: #3d3d4a;
+    --btn-bg: #3d3d4a;
   }
 
   body {
@@ -26,10 +41,14 @@
     padding: 15px;
     padding-bottom: 50px;
     min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
   }
 
   h1, h2, h3 { text-align: center; margin-top: 5px; margin-bottom: 10px; }
   
+  .header-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .theme-toggle { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
   .dashboard {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
@@ -37,93 +56,112 @@
     border-radius: 16px;
     text-align: center;
     margin-bottom: 20px;
-    box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   }
-
   .dashboard p { margin: 8px 0; font-size: 1.1em; }
-  
-  .subject-card {
+  .plant-growth { font-size: 2em; margin: 10px 0; animation: bounce 2s infinite ease-in-out; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+  .card {
     background: var(--card-bg);
     padding: 15px;
     border-radius: 16px;
     margin-bottom: 20px;
     box-shadow: 0 8px 15px rgba(0,0,0,0.05);
-    border: 1px solid rgba(0,0,0,0.02);
+    border: 1px solid var(--border);
+    transition: background 0.3s, border 0.3s;
   }
 
+  .smart-insights { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+  .insight-box { background: var(--border); padding: 12px; border-radius: 12px; }
+  .insight-title { font-size: 0.8em; color: var(--text-muted); font-weight: 600; margin-bottom: 5px;}
+  .insight-value { font-size: 1.2em; font-weight: bold; }
+
   .subject-summary {
-    display: flex;
-    justify-content: space-around;
-    font-size: 0.9em;
-    background: #f1f2f6;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    font-weight: 600;
+    display: flex; justify-content: space-around; font-size: 0.9em;
+    background: var(--border); padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: 600;
   }
 
   .topic-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #f1f2f6;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
   }
   .topic-row:last-child { border-bottom: none; }
   
   .topic-info { flex: 1; margin-right: 15px; }
-  .topic-name { font-weight: 600; font-size: 0.9em; margin-bottom: 6px; color: #2f3542; }
+  .topic-name { font-weight: 600; font-size: 0.9em; margin-bottom: 6px; }
+  .note-text { font-size: 0.8em; color: var(--text-muted); font-weight: normal; margin-top: 3px; font-style: italic;}
+  .note-btn { cursor: pointer; opacity: 0.6; transition: 0.2s; font-size: 1.1em; margin-left: 5px; }
+  .note-btn:hover { opacity: 1; }
   
-  .controls { display: flex; align-items: center; gap: 10px; }
+  .controls { display: flex; align-items: center; gap: 8px; }
   
-  button {
+  .btn-count {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    border-radius: 8px;
-    width: 30px;
-    height: 30px;
-    font-size: 1.2em;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    color: white; border: none; border-radius: 8px; width: 28px; height: 28px;
+    font-size: 1.2em; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center;
   }
-  button:active { transform: scale(0.9); }
-  button:disabled { background: #ced6e0; cursor: not-allowed; box-shadow: none; }
+  .btn-count:active { transform: scale(0.9); }
+  .btn-count:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
   
   .progress-text { font-size: 0.85em; font-weight: 700; min-width: 40px; text-align: center; }
   
-  .progress-bar-bg { background: #dfe4ea; border-radius: 10px; height: 6px; width: 100%; overflow: hidden; }
-  .progress-bar-fill { height: 100%; width: 0%; transition: width 0.4s ease; }
+  .progress-bar-bg { background: var(--border); border-radius: 10px; height: 6px; width: 100%; overflow: hidden; }
+  .progress-bar-fill { height: 100%; width: 0%; transition: width 0.4s ease, background-color 0.4s ease; }
 
-  /* Table Styles for History */
+  /* History Table */
   .history-table-container { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; }
-  th, td { padding: 10px 5px; text-align: center; border-bottom: 1px solid #f1f2f6; }
-  th { background-color: #f8f9fa; color: #57606f; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; color: var(--text); }
+  th, td { padding: 10px 5px; text-align: center; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; color: var(--text-muted); }
   tr:last-child td { border-bottom: none; }
-  .today-row { background-color: #eafaf1; font-weight: bold; }
 
-  .badge {
-    display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; color: white;
+  /* Settings Buttons */
+  .settings-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .action-btn { 
+    background: var(--btn-bg); color: var(--text); border: 1px solid var(--border); 
+    padding: 10px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+    font-family: inherit; font-size: 0.85em; display: flex; align-items: center; gap: 5px;
   }
+  .action-btn.danger { background: #ffeaa7; color: #d63031; border-color: #ff7675; }
+  body.dark-mode .action-btn.danger { background: #4a2a2a; color: #ff7675; border-color: #ff4757; }
 </style>
 </head>
 <body>
 
+<div class="header-actions">
+  <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+</div>
+
 <div class="dashboard">
-  <h2 style="color: white; font-size: 1.5em; margin-top: 0;">🎓 Master Dashboard</h2>
-  <p>Total Syllabus: <strong>282 Classes</strong></p>
-  <p>✅ Completed: <strong id="total-completed">0</strong> &nbsp;|&nbsp; ⏳ Left: <strong id="total-remaining">282</strong></p>
-  <div class="progress-bar-bg" style="background: rgba(255,255,255,0.3); height: 8px; margin-top: 15px;">
+  <h2 style="margin-top: 0;">🎓 Master Dashboard</h2>
+  <div class="plant-growth" id="plant-display">🌱</div>
+  <p>Total Syllabus: <strong>283 Classes</strong></p>
+  <p>✅ Completed: <strong id="total-completed">0</strong> &nbsp;|&nbsp; ⏳ Left: <strong id="total-remaining">283</strong></p>
+  <div class="progress-bar-bg" style="background: rgba(255,255,255,0.2); height: 8px; margin-top: 15px;">
     <div id="overall-progress" class="progress-bar-fill" style="background: #2ed573;"></div>
   </div>
 </div>
 
-<div class="subject-card">
+<div class="card">
+  <h3>🧠 Smart Insights</h3>
+  <div class="smart-insights">
+    <div class="insight-box">
+      <div class="insight-title">🔥 Daily Streak</div>
+      <div class="insight-value" id="streak-display">0 Days</div>
+    </div>
+    <div class="insight-box">
+      <div class="insight-title">🎯 Today's Target</div>
+      <div class="insight-value" style="cursor: pointer;" onclick="setDailyTarget()" id="target-display">0/5</div>
+    </div>
+    <div class="insight-box" style="grid-column: span 2;">
+      <div class="insight-title">🔮 Expected Completion (By Current Speed)</div>
+      <div class="insight-value" id="forecast-display">Calculating...</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
   <h3 style="color: var(--hindi);">📙 Hindi</h3>
   <div class="subject-summary">
     <span>Total: 87</span>
@@ -133,7 +171,7 @@
   <div id="hindi-container"></div>
 </div>
 
-<div class="subject-card">
+<div class="card">
   <h3 style="color: var(--english);">📘 English</h3>
   <div class="subject-summary">
     <span>Total: 110</span>
@@ -143,7 +181,7 @@
   <div id="english-container"></div>
 </div>
 
-<div class="subject-card">
+<div class="card">
   <h3 style="color: var(--maths);">📗 Maths</h3>
   <div class="subject-summary">
     <span>Total: 86</span>
@@ -153,7 +191,7 @@
   <div id="maths-container"></div>
 </div>
 
-<div class="subject-card">
+<div class="card">
   <h3>📅 Last 7 Days Performance</h3>
   <div class="history-table-container">
     <table id="history-table">
@@ -166,177 +204,262 @@
           <th style="color: var(--maths);">Mat</th>
         </tr>
       </thead>
-      <tbody id="history-body">
-        </tbody>
+      <tbody id="history-body"></tbody>
     </table>
   </div>
 </div>
 
+<div class="card">
+  <h3>⚙️ Settings & Backup</h3>
+  <div class="settings-grid">
+    <button class="action-btn" onclick="exportData()">💾 Backup Data</button>
+    <label class="action-btn" style="cursor: pointer;">
+      📂 Restore Data <input type="file" style="display: none;" accept=".json" onchange="importData(event)">
+    </label>
+    <button class="action-btn danger" onclick="resetData()">⚠️ Reset All</button>
+  </div>
+</div>
+
 <script>
+  // 1. Core Data Setup (Removed 'One word PYQs' from English)
   const defaultData = {
-    hindi: [{ topic: "Class 1 to 87", total: 87, completed: 0 }],
+    hindi: [{ topic: "Class 1 to 87", total: 87, completed: 0, note: "" }],
     english: [
-      { topic: "Tense", total: 14, completed: 0 }, { topic: "Tense PYQ", total: 2, completed: 0 },
-      { topic: "Model", total: 6, completed: 0 }, { topic: "Subject verb agreement", total: 7, completed: 0 },
-      { topic: "Degree of adjective", total: 4, completed: 0 }, { topic: "Conjunctions", total: 4, completed: 0 },
-      { topic: "Determiners", total: 8, completed: 0 }, { topic: "Determiners PYQ", total: 2, completed: 0 },
-      { topic: "Article", total: 6, completed: 0 }, { topic: "Active passive voice", total: 6, completed: 0 },
-      { topic: "Direct indirect", total: 5, completed: 0 },
-      // नए जोड़े गए टॉपिक्स
-      { topic: "Transformation", total: 9, completed: 0 },
-      { topic: "Translation", total: 5, completed: 0 },
-      { topic: "Preposition", total: 5, completed: 0 },
-      { topic: "Vocab- Prefix-Suffix-Root Words", total: 4, completed: 0 },
-      { topic: "Vocab Confusable Words", total: 11, completed: 0 },
-      { topic: "Vocab Extra Confusable Words", total: 5, completed: 0 },
-      { topic: "Vocab One word + PYQs", total: 6, completed: 0 }
+      { topic: "Tense", total: 14, completed: 0, note: "" }, { topic: "Tense PYQ", total: 2, completed: 0, note: "" },
+      { topic: "Model", total: 6, completed: 0, note: "" }, { topic: "Subject verb agreement", total: 7, completed: 0, note: "" },
+      { topic: "Degree of adjective", total: 4, completed: 0, note: "" }, { topic: "Conjunctions", total: 4, completed: 0, note: "" },
+      { topic: "Determiners", total: 8, completed: 0, note: "" }, { topic: "Determiners PYQ", total: 2, completed: 0, note: "" },
+      { topic: "Article", total: 6, completed: 0, note: "" }, { topic: "Active passive voice", total: 6, completed: 0, note: "" },
+      { topic: "Active passive MCQs", total: 2, completed: 0, note: "" }, { topic: "Direct indirect", total: 4, completed: 0, note: "" },
+      { topic: "Transformation", total: 9, completed: 0, note: "" }, { topic: "Translation", total: 5, completed: 0, note: "" },
+      { topic: "Preposition", total: 5, completed: 0, note: "" }, { topic: "Vocab- Prefix-Suffix-Root Words", total: 4, completed: 0, note: "" },
+      { topic: "Vocab Confusable Words", total: 11, completed: 0, note: "" }, { topic: "Vocab Extra Confusable Words", total: 5, completed: 0, note: "" },
+      { topic: "Vocab One word + PYQs", total: 6, completed: 0, note: "" }
     ],
     maths: [
-      { topic: "Percentage", total: 5, completed: 0 }, { topic: "Profit & loss", total: 6, completed: 0 },
-      { topic: "Discount", total: 1, completed: 0 }, { topic: "Simple interest", total: 4, completed: 0 },
-      { topic: "Compound interest", total: 4, completed: 0 }, { topic: "Ratio & proportion", total: 6, completed: 0 },
-      { topic: "Partnership", total: 1, completed: 0 }, { topic: "Statistics", total: 9, completed: 0 },
-      { topic: "Trigonometry", total: 10, completed: 0 }, { topic: "Lines and angles", total: 5, completed: 0 },
-      { topic: "Geometry (triangle)", total: 10, completed: 0 }, { topic: "Mensuration (2D)", total: 10, completed: 0 },
-      { topic: "Algebra", total: 6, completed: 0 }, { topic: "Logarithm", total: 3, completed: 0 },
-      { topic: "Coordinate geometry", total: 5, completed: 0 }, { topic: "Vedic maths", total: 1, completed: 0 }
+      { topic: "Percentage", total: 5, completed: 0, note: "" }, { topic: "Profit & loss", total: 6, completed: 0, note: "" },
+      { topic: "Discount", total: 1, completed: 0, note: "" }, { topic: "Simple interest", total: 4, completed: 0, note: "" },
+      { topic: "Compound interest", total: 4, completed: 0, note: "" }, { topic: "Ratio & proportion", total: 6, completed: 0, note: "" },
+      { topic: "Partnership", total: 1, completed: 0, note: "" }, { topic: "Statistics", total: 9, completed: 0, note: "" },
+      { topic: "Trigonometry", total: 10, completed: 0, note: "" }, { topic: "Lines and angles", total: 5, completed: 0, note: "" },
+      { topic: "Geometry (triangle)", total: 10, completed: 0, note: "" }, { topic: "Mensuration (2D)", total: 10, completed: 0, note: "" },
+      { topic: "Algebra", total: 6, completed: 0, note: "" }, { topic: "Logarithm", total: 3, completed: 0, note: "" },
+      { topic: "Coordinate geometry", total: 5, completed: 0, note: "" }, { topic: "Vedic maths", total: 1, completed: 0, note: "" }
     ],
-    history: {} // New object to store daily history
+    history: {}, target: 5, celebrated: { hindi: false, english: false, maths: false }
   };
 
-  const subjectTotals = { hindi: 87, english: 112, maths: 86 };
-  const subjectColors = { hindi: 'var(--hindi)', english: 'var(--english)', maths: 'var(--maths)' };
-  
+  const subjectTotals = { hindi: 87, english: 110, maths: 86 };
   let classData = JSON.parse(localStorage.getItem("myProSyllabusTracker"));
   
-  // Migration for new features and syncing new topics safely
-  if (!classData) {
-    classData = JSON.parse(JSON.stringify(defaultData));
-  } else {
-    // Sync new topics into existing user data so progress is not lost
-    ['hindi', 'english', 'maths'].forEach(subject => {
-      defaultData[subject].forEach(defItem => {
-        let existingItem = classData[subject].find(item => item.topic === defItem.topic);
-        if (!existingItem) {
-          classData[subject].push({ ...defItem });
-        } else {
-           // Update total classes in case they were modified (like Preposition 4 to 5)
-           existingItem.total = defItem.total;
-        }
+  // 2. Smart Sync Logic (Keeps progress, adds notes, removes deleted topics)
+  let syncedData = { history: classData?.history || {}, target: classData?.target || 5, celebrated: classData?.celebrated || {hindi:false, english:false, maths:false} };
+  ['hindi', 'english', 'maths'].forEach(subject => {
+    syncedData[subject] = [];
+    defaultData[subject].forEach(defItem => {
+      let existingItem = classData && classData[subject] ? classData[subject].find(item => item.topic === defItem.topic) : null;
+      syncedData[subject].push({
+        topic: defItem.topic,
+        total: defItem.total,
+        completed: existingItem ? existingItem.completed : 0,
+        note: existingItem?.note || ""
       });
     });
-  }
-  
-  if (!classData.history) {
-    classData.history = {};
+  });
+  classData = syncedData;
+  saveData(false);
+
+  // Theme Management
+  if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); }
+  function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
   }
 
-  function getTodayDateStr() {
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  // Helpers
+  function getTodayDateStr() { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; }
+  function formatDateDisplay(dStr) { return new Date(dStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }); }
+  function saveData(reRender = true) { localStorage.setItem("myProSyllabusTracker", JSON.stringify(classData)); if(reRender) render(); }
+
+  // Color Coded Progress Bar Logic
+  function getProgressColor(percent) {
+    if(percent < 30) return '#ff4757'; // Red
+    if(percent <= 70) return '#ffa502'; // Yellow
+    return '#2ed573'; // Green
   }
 
-  function formatDateDisplay(dateStr) {
-    const dateObj = new Date(dateStr);
-    return dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  // Plant Growth Logic
+  function getPlantEmoji(percent) {
+    if(percent === 0) return "🌱 Seed";
+    if(percent < 25) return "🌿 Sprout";
+    if(percent < 50) return "🪴 Potted Plant";
+    if(percent < 75) return "🌳 Small Tree";
+    if(percent < 100) return "🌲 Big Tree";
+    return "🍎 Fruit Tree (Max Level!)";
   }
 
-  function saveData() {
-    localStorage.setItem("myProSyllabusTracker", JSON.stringify(classData));
-    render();
+  // Notes Logic
+  function editNote(subject, index) {
+    let currentNote = classData[subject][index].note || "";
+    let newNote = prompt("📝 Add/Edit Note for " + classData[subject][index].topic, currentNote);
+    if(newNote !== null) { classData[subject][index].note = newNote.trim(); saveData(); }
   }
 
+  // Daily Target Logic
+  function setDailyTarget() {
+    let t = prompt("🎯 Set your daily classes target:", classData.target);
+    if(t && !isNaN(t) && t > 0) { classData.target = parseInt(t); saveData(); }
+  }
+
+  // Update Data
   function updateCount(subject, index, change) {
     let item = classData[subject][index];
     let newCount = item.completed + change;
-    
     if (newCount >= 0 && newCount <= item.total) {
       item.completed = newCount;
-      
-      // Update Daily History
       const today = getTodayDateStr();
-      if (!classData.history[today]) {
-        classData.history[today] = { hindi: 0, english: 0, maths: 0 };
-      }
-      
+      if (!classData.history[today]) classData.history[today] = { hindi: 0, english: 0, maths: 0 };
       classData.history[today][subject] += change;
-      
-      // Prevent history going negative if user unclicks
-      if (classData.history[today][subject] < 0) {
-        classData.history[today][subject] = 0;
-      }
-
+      if (classData.history[today][subject] < 0) classData.history[today][subject] = 0;
       saveData();
+      checkCelebration(subject);
     }
   }
 
+  function checkCelebration(subject) {
+    let completed = classData[subject].reduce((acc, curr) => acc + curr.completed, 0);
+    if(completed === subjectTotals[subject] && !classData.celebrated[subject]) {
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+      classData.celebrated[subject] = true;
+      saveData(false);
+    }
+  }
+
+  // Advanced Stats Calculation
+  function calculateStats() {
+    // 1. Streak Calculation
+    let streak = 0; let d = new Date();
+    let todayData = classData.history[getTodayDateStr()];
+    let todayDone = todayData ? (todayData.hindi + todayData.english + todayData.maths) : 0;
+    
+    document.getElementById('target-display').innerText = `${todayDone}/${classData.target}`;
+    if(todayDone === 0) d.setDate(d.getDate() - 1); // Check from yesterday if today is 0
+    
+    while(true) {
+      let hist = classData.history[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`];
+      let done = hist ? (hist.hindi + hist.english + hist.maths) : 0;
+      if(done > 0) { streak++; d.setDate(d.getDate() - 1); } else { break; }
+    }
+    document.getElementById('streak-display').innerText = `${streak} Days ${streak>0 ? '🔥' : '❄️'}`;
+
+    // 2. Forecaster
+    let totalLeft = parseInt(document.getElementById('total-remaining').innerText);
+    if(totalLeft === 0) { document.getElementById('forecast-display').innerText = "Done! 🎉"; return; }
+    
+    let last7Total = 0; let fd = new Date();
+    for(let i=0; i<7; i++) {
+      let hist = classData.history[`${fd.getFullYear()}-${String(fd.getMonth()+1).padStart(2,'0')}-${String(fd.getDate()).padStart(2,'0')}`];
+      if(hist) last7Total += (hist.hindi + hist.english + hist.maths);
+      fd.setDate(fd.getDate() - 1);
+    }
+    let avg = last7Total / 7;
+    if(avg <= 0) { document.getElementById('forecast-display').innerText = "Need to study more! 🚀"; }
+    else {
+      let daysLeft = Math.ceil(totalLeft / avg);
+      let finishDate = new Date(); finishDate.setDate(finishDate.getDate() + daysLeft);
+      document.getElementById('forecast-display').innerText = finishDate.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    }
+  }
+
+  // Render Engine
   function render() {
-    let grandTotalClasses = 285;
-    let grandTotalCompleted = 0;
+    let grandTotalClasses = 283; let grandTotalCompleted = 0;
 
     ['hindi', 'english', 'maths'].forEach(subject => {
       let container = document.getElementById(`${subject}-container`);
-      container.innerHTML = '';
-      let subjectCompletedCount = 0;
+      container.innerHTML = ''; let subjectCompletedCount = 0;
 
       classData[subject].forEach((item, index) => {
-        subjectCompletedCount += item.completed;
-        grandTotalCompleted += item.completed;
+        subjectCompletedCount += item.completed; grandTotalCompleted += item.completed;
         let percentage = (item.completed / item.total) * 100;
+        let color = getProgressColor(percentage);
         
         container.innerHTML += `
           <div class="topic-row">
             <div class="topic-info">
-              <div class="topic-name">${item.topic}</div>
-              <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${percentage}%; background: ${subjectColors[subject]}"></div>
+              <div class="topic-name">
+                ${item.topic} <span class="note-btn" onclick="editNote('${subject}', ${index})">✏️</span>
               </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${percentage}%; background: ${color}"></div>
+              </div>
+              ${item.note ? `<div class="note-text">📝 ${item.note}</div>` : ''}
             </div>
             <div class="controls">
-              <button onclick="updateCount('${subject}', ${index}, -1)" ${item.completed === 0 ? 'disabled' : ''}>-</button>
+              <button class="btn-count" onclick="updateCount('${subject}', ${index}, -1)" ${item.completed === 0 ? 'disabled' : ''}>-</button>
               <span class="progress-text">${item.completed}/${item.total}</span>
-              <button onclick="updateCount('${subject}', ${index}, 1)" ${item.completed === item.total ? 'disabled' : ''}>+</button>
+              <button class="btn-count" onclick="updateCount('${subject}', ${index}, 1)" ${item.completed === item.total ? 'disabled' : ''}>+</button>
             </div>
           </div>
         `;
       });
-
       document.getElementById(`${subject}-completed`).innerText = subjectCompletedCount;
       document.getElementById(`${subject}-remaining`).innerText = subjectTotals[subject] - subjectCompletedCount;
     });
 
     document.getElementById('total-completed').innerText = grandTotalCompleted;
     document.getElementById('total-remaining').innerText = grandTotalClasses - grandTotalCompleted;
-    document.getElementById('overall-progress').style.width = `${(grandTotalClasses > 0 ? (grandTotalCompleted / grandTotalClasses) * 100 : 0)}%`;
+    
+    let overallPercent = (grandTotalCompleted / grandTotalClasses) * 100;
+    document.getElementById('overall-progress').style.width = `${overallPercent}%`;
+    document.getElementById('plant-display').innerText = getPlantEmoji(overallPercent);
 
     renderHistory();
+    calculateStats();
   }
 
   function renderHistory() {
     const historyBody = document.getElementById('history-body');
-    historyBody.innerHTML = '';
-    const todayStr = getTodayDateStr();
+    historyBody.innerHTML = ''; const todayStr = getTodayDateStr();
 
     for (let i = 0; i < 7; i++) {
-      let d = new Date();
-      d.setDate(d.getDate() - i);
+      let d = new Date(); d.setDate(d.getDate() - i);
       let dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      
       let dayData = classData.history[dateStr] || { hindi: 0, english: 0, maths: 0 };
       let dayTotal = dayData.hindi + dayData.english + dayData.maths;
       
       let isToday = (dateStr === todayStr);
-      let displayDate = isToday ? "Today" : formatDateDisplay(dateStr);
-
       historyBody.innerHTML += `
-        <tr class="${isToday ? 'today-row' : ''}">
-          <td>${displayDate}</td>
-          <td><span class="badge" style="background: ${dayTotal > 0 ? '#2ed573' : '#ced6e0'}">${dayTotal}</span></td>
-          <td>${dayData.hindi}</td>
-          <td>${dayData.english}</td>
-          <td>${dayData.maths}</td>
+        <tr style="${isToday ? 'background-color: rgba(46, 213, 115, 0.1); font-weight: bold;' : ''}">
+          <td>${isToday ? "Today" : formatDateDisplay(dateStr)}</td>
+          <td><span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.8em; color:white; background: ${dayTotal > 0 ? '#2ed573' : 'var(--text-muted)'}">${dayTotal}</span></td>
+          <td>${dayData.hindi}</td><td>${dayData.english}</td><td>${dayData.maths}</td>
         </tr>
       `;
+    }
+  }
+
+  // Settings Functions
+  function exportData() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(classData));
+    const a = document.createElement('a'); a.href = dataStr; a.download = "StudyTracker_Backup.json"; a.click();
+  }
+
+  function importData(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try { classData = JSON.parse(e.target.result); saveData(); alert("✅ Data Restored Successfully!"); } 
+        catch (err) { alert("❌ Invalid File Format!"); }
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  function resetData() {
+    if(confirm("⚠️ WARNING: This will delete ALL your progress and history! Are you 100% sure?")) {
+      classData = JSON.parse(JSON.stringify(defaultData)); saveData(); alert("♻️ All data has been reset.");
     }
   }
 
@@ -344,4 +467,3 @@
 </script>
 </body>
 </html>
-
